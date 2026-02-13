@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romantic Interactive Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(45deg, #ff9a9e, #fecfef, #fecfef, #ff9a9e);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            color: #333;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.5s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .title {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            color: #d63384;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #d63384;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(45deg, #d63384, #a61e4d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            color: #d63384;
+            margin: 20px 0;
+        }
+
+        .heart,
+        .flower {
+            position: absolute;
+            font-size: 2rem;
+            pointer-events: none;
+        }
+
+        .heart {
+            color: #d63384;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .flower {
+            color: #ff69b4;
+            animation: float 3s ease-in-out forwards;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        .game-heart {
+            position: absolute;
+            font-size: 3rem;
+            color: #d63384;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .no-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="loginPage" class="page active">
+        <h1 class="title">Welcome Menna 💖</h1>
+        <p class="subtitle">Enter the secret password to continue</p>
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button onclick="checkPassword()">Enter</button>
+    </div>
+
+    <div id="mainPage" class="page">
+        <h1 class="title" id="mainTitle"></h1>
+        <p class="subtitle">Our love has been blossoming for:</p>
+        <div class="timer" id="timer"></div>
+
+        <button onclick="showSurprise()">Surprise 🎁</button>
+        <button onclick="startGame()">Catch My Heart 🎮</button>
+        <button onclick="showQuestion()">Special Question 💍</button>
+        <button onclick="showMessage()">Message For My Soul 💌</button>
+    </div>
+
+    <div id="surprisePage" class="page">
+        <h1 class="title">Surprise!</h1>
+        <p class="subtitle">Enjoy the hearts floating around!</p>
+        <button onclick="backToMain()">Back</button>
+    </div>
+
+    <div id="gamePage" class="page">
+        <h1 class="title">Catch My Heart!</h1>
+        <p class="subtitle">Click on the heart before it moves!</p>
+        <button onclick="backToMain()">Back</button>
+    </div>
+
+    <div id="questionPage" class="page">
+        <h1 class="title">Special Question</h1>
+        <p class="subtitle">Do you love me forever?</p>
+        <button onclick="yesAnswer()">YES</button>
+        <button id="noButton" class="no-button">NO</button>
+        <button onclick="backToMain()">Back</button>
+    </div>
+
+    <!-- الصفحة الجديدة -->
+    <div id="messagePage" class="page">
+        <h1 class="title">For My Soul 💖</h1>
+        <p class="subtitle" id="loveMessage"></p>
+        <button onclick="backToMain()">Back</button>
+    </div>
+
+    <script>
+
+        let timerInterval, gameInterval, typingTimeout, hearts = [], gameHeart, musicStarted = false;
+
+        function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === 'menna') {
+                switchPage('loginPage', 'mainPage');
+                if (!musicStarted) {
+                    let audio = document.getElementById('bgMusic');
+                    audio.volume = 0.5;
+                    audio.play().catch(() => { });
+                    musicStarted = true;
+                }
+                startTyping(); startTimer();
+            } else { alert('Wrong name 😏'); }
+        }
+
+        function switchPage(from, to) {
+            document.getElementById(from).classList.remove('active');
+            document.getElementById(to).classList.add('active');
+            clearIntervals(); removeHearts();
+            if (to === 'mainPage') { startTimer(); }
+        }
+
+        function startTyping() {
+            const title = document.getElementById('mainTitle');
+            const text = "Our Eternal Love";
+            let i = 0;
+            title.textContent = '';
+            function type() {
+                if (i < text.length) {
+                    title.textContent += text.charAt(i);
+                    i++;
+                    typingTimeout = setTimeout(type, 70);
+                }
+            }
+            type();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            function updateTimer() {
+                const start = new Date('2022-09-07T00:00:00');
+                const now = new Date();
+                const diff = now - start;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('timer').textContent =
+                    `${days} days, ${hours} hours, ${minutes} minutes`;
+            }
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function showSurprise() { switchPage('mainPage', 'surprisePage'); generateHearts(); }
+
+        function generateHearts() {
+            for (let i = 0; i < 50; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.textContent = '❤️';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.top = Math.random() * 100 + '%';
+                document.body.appendChild(heart);
+                hearts.push(heart);
+                setTimeout(() => heart.remove(), 4000);
+            }
+        }
+
+        function startGame() { switchPage('mainPage', 'gamePage'); }
+
+        function showQuestion() { switchPage('mainPage', 'questionPage'); }
+
+        function yesAnswer() { generateHearts(); alert('I love you too forever! 💕'); }
+
+        function showMessage() {
+            switchPage('mainPage', 'messagePage');
+            startLoveTyping();
+            generateHearts();
+        }
+
+        function startLoveTyping() {
+            const message = `
+Menna 💕
+You are my peace,
+my happiness,
+my safe place.
+
+Every day with you
+is my favorite story.
+
+I will always choose you.
+Forever. ❤️
+`;
+            const element = document.getElementById("loveMessage");
+            element.textContent = "";
+            let i = 0;
+
+            function typeWriter() {
+                if (i < message.length) {
+                    element.textContent += message.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 40);
+                }
+            }
+            typeWriter();
+        }
+
+        function backToMain() {
+            switchPage(document.querySelector('.page.active').id, 'mainPage');
+        }
+
+        function clearIntervals() {
+            clearInterval(timerInterval);
+            clearInterval(gameInterval);
+            clearTimeout(typingTimeout);
+        }
+
+        function removeHearts() {
+            hearts.forEach(h => h.remove());
+            hearts = [];
+        }
+
+    </script>
+</body>
+
+</html>
